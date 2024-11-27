@@ -9,6 +9,8 @@ const questions = [
     options: ["Merah", "Biru", "Hijau", "Kuning"],
     answer: "Biru",
     hint: "Pikirkan warna saat hari cerah.",
+    explanation:
+      "Warna langit terlihat biru karena cahaya matahari yang tersebar di atmosfer.",
   },
   {
     question: "Siapa penemu bola lampu?",
@@ -20,41 +22,49 @@ const questions = [
     ],
     answer: "Thomas Edison",
     hint: "Penemu terkenal yang juga dikenal karena kontribusinya pada listrik.",
+    explanation:
+      "Thomas Edison adalah penemu bola lampu yang praktis dan efisien.",
   },
   {
     question: "Berapa hasil dari 3 + 5?",
     options: ["5", "8", "7", "9"],
     answer: "8",
     hint: "Pertambahan sederhana.",
+    explanation: "3 + 5 sama dengan 8.",
   },
   {
     question: "Di negara mana Menara Eiffel berada?",
     options: ["Italia", "Spanyol", "Prancis", "Jerman"],
     answer: "Prancis",
     hint: "Negara yang terkenal dengan kota cinta.",
+    explanation: "Menara Eiffel terletak di Paris, Prancis.",
   },
   {
     question: "Hewan apa yang dikenal sebagai 'Raja Hutan'?",
     options: ["Singa", "Harimau", "Gajah", "Serigala"],
     answer: "Singa",
     hint: "Hewan dengan julukan raja.",
+    explanation:
+      "Singa sering disebut sebagai 'Raja Hutan' karena kekuatannya.",
   },
 ];
 
 const Quiz = ({ onQuizComplete }) => {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(1);
-  const [score, setScore] = useState(0); // Mulai dari 0
+  const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [quizCompleted, setQuizCompleted] = useState(false);
   const [showHint, setShowHint] = useState(false);
   const [feedback, setFeedback] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
+  const [showExplanation, setShowExplanation] = useState(false);
 
   const handleNextQuestion = useCallback(() => {
     setTimeLeft(10);
     setShowHint(false);
     setFeedback(null);
-    setIsAnswered(false); // Reset untuk pertanyaan berikutnya
+    setIsAnswered(false);
+    setShowExplanation(false);
 
     const nextQuestionIndex = currentQuestionIndex + 1;
     if (nextQuestionIndex <= questions.length) {
@@ -68,7 +78,7 @@ const Quiz = ({ onQuizComplete }) => {
   useEffect(() => {
     if (timeLeft === 0 && !isAnswered) {
       setFeedback("Waktu habis. Otomatis melanjutkan.");
-      setTimeout(handleNextQuestion, 1500); // Lanjutkan ke pertanyaan berikutnya setelah 1,5 detik jika waktu habis
+      setTimeout(handleNextQuestion, 1500);
     } else if (timeLeft > 0 && !quizCompleted) {
       const timerId = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
@@ -82,12 +92,15 @@ const Quiz = ({ onQuizComplete }) => {
     setIsAnswered(true);
 
     if (selectedOption === questions[currentQuestionIndex - 1].answer) {
-      const points = timeLeft > 5 ? 2 : 1; // Poin berganda untuk jawaban cepat (dalam 5 detik)
+      const points = timeLeft > 5 ? 2 : 1;
       setScore((prevScore) => prevScore + points);
       setFeedback("Benar!");
     } else {
       setFeedback("Salah, coba lagi.");
     }
+
+    // Tampilkan penjelasan setelah jawaban dipilih
+    setShowExplanation(true);
   };
 
   const handleShowHint = () => {
@@ -101,6 +114,7 @@ const Quiz = ({ onQuizComplete }) => {
     setQuizCompleted(false);
     setShowHint(false);
     setFeedback(null);
+    setShowExplanation(false);
   };
 
   return (
@@ -126,6 +140,11 @@ const Quiz = ({ onQuizComplete }) => {
             </p>
           )}
           {feedback && <p className="mt-4">{feedback}</p>}
+          {showExplanation && (
+            <p className="mt-2 text-gray-600">
+              Penjelasan: {questions[currentQuestionIndex - 1].explanation}
+            </p>
+          )}
           {isAnswered && (
             <button
               onClick={handleNextQuestion}

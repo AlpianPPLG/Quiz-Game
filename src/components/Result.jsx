@@ -21,4 +21,3 @@ Result.propTypes = {
 };
 
 export default Result;
-  
