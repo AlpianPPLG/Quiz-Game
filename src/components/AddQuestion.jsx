@@ -7,6 +7,7 @@ const AddQuestion = ({ onAddQuestion }) => {
   const [answer, setAnswer] = useState("");
   const [hint, setHint] = useState("");
   const [explanation, setExplanation] = useState("");
+  const [category, setCategory] = useState("Umum"); // State untuk kategori
 
   const handleOptionChange = (index, value) => {
     const newOptions = [...options];
@@ -22,14 +23,20 @@ const AddQuestion = ({ onAddQuestion }) => {
       answer,
       hint,
       explanation,
+      category, // Tambahkan kategori ke pertanyaan baru
     };
     onAddQuestion(newQuestion);
     // Reset form
+    resetForm();
+  };
+
+  const resetForm = () => {
     setQuestion("");
     setOptions(["", "", "", ""]);
     setAnswer("");
     setHint("");
     setExplanation("");
+    setCategory("Umum"); // Reset kategori ke default
   };
 
   return (
@@ -76,6 +83,17 @@ const AddQuestion = ({ onAddQuestion }) => {
         onChange={(e) => setExplanation(e.target.value)}
         className="block w-full mb-4 border p-2 rounded"
       />
+      <select
+        value={category}
+        onChange={(e) => setCategory(e.target.value)}
+        className="block w-full mb-4 border p-2 rounded"
+      >
+        <option value="Umum">Umum</option>
+        <option value="Ilmu Pengetahuan">Ilmu Pengetahuan</option>
+        <option value="Matematika">Matematika</option>
+        <option value="Geografi">Geografi</option>
+        <option value="Biologi">Biologi</option>
+      </select>
       <button
         type="submit"
         className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-700"

@@ -3,54 +3,8 @@ import PropTypes from "prop-types";
 import Question from "./Question";
 import Result from "./Result";
 
-const questions = [
-  {
-    question: "Apa warna langit?",
-    options: ["Merah", "Biru", "Hijau", "Kuning"],
-    answer: "Biru",
-    hint: "Pikirkan warna saat hari cerah.",
-    explanation:
-      "Warna langit terlihat biru karena cahaya matahari yang tersebar di atmosfer.",
-  },
-  {
-    question: "Siapa penemu bola lampu?",
-    options: [
-      "Thomas Edison",
-      "Albert Einstein",
-      "Isaac Newton",
-      "Nikola Tesla",
-    ],
-    answer: "Thomas Edison",
-    hint: "Penemu terkenal yang juga dikenal karena kontribusinya pada listrik.",
-    explanation:
-      "Thomas Edison adalah penemu bola lampu yang praktis dan efisien.",
-  },
-  {
-    question: "Berapa hasil dari 3 + 5?",
-    options: ["5", "8", "7", "9"],
-    answer: "8",
-    hint: "Pertambahan sederhana.",
-    explanation: "3 + 5 sama dengan 8.",
-  },
-  {
-    question: "Di negara mana Menara Eiffel berada?",
-    options: ["Italia", "Spanyol", "Prancis", "Jerman"],
-    answer: "Prancis",
-    hint: "Negara yang terkenal dengan kota cinta.",
-    explanation: "Menara Eiffel terletak di Paris, Prancis.",
-  },
-  {
-    question: "Hewan apa yang dikenal sebagai 'Raja Hutan'?",
-    options: ["Singa", "Harimau", "Gajah", "Serigala"],
-    answer: "Singa",
-    hint: "Hewan dengan julukan raja.",
-    explanation:
-      "Singa sering disebut sebagai 'Raja Hutan' karena kekuatannya.",
-  },
-];
-
-const Quiz = ({ onQuizComplete }) => {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(1);
+const Quiz = ({ onQuizComplete, questions, difficulty }) => {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [timeLeft, setTimeLeft] = useState(10);
   const [quizCompleted, setQuizCompleted] = useState(false);
@@ -58,22 +12,34 @@ const Quiz = ({ onQuizComplete }) => {
   const [feedback, setFeedback] = useState(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [showExplanation, setShowExplanation] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
+
+  const timerSettings = {
+    Mudah: 15,
+    Sedang: 10,
+    Sulit: 5,
+  };
+
+  useEffect(() => {
+    setTimeLeft(timerSettings[difficulty]);
+  }, [difficulty]);
 
   const handleNextQuestion = useCallback(() => {
-    setTimeLeft(10);
+    setTimeLeft(timerSettings[difficulty]);
     setShowHint(false);
     setFeedback(null);
     setIsAnswered(false);
     setShowExplanation(false);
+    setShowWarning(false);
 
     const nextQuestionIndex = currentQuestionIndex + 1;
-    if (nextQuestionIndex <= questions.length) {
+    if (nextQuestionIndex < questions.length) {
       setCurrentQuestionIndex(nextQuestionIndex);
     } else {
       setQuizCompleted(true);
-      onQuizComplete(score === questions.length ? 5 : score);
+      onQuizComplete(score);
     }
-  }, [currentQuestionIndex, onQuizComplete, score]);
+  }, [currentQuestionIndex, onQuizComplete, score, difficulty, questions]);
 
   useEffect(() => {
     if (timeLeft === 0 && !isAnswered) {
@@ -83,15 +49,18 @@ const Quiz = ({ onQuizComplete }) => {
       const timerId = setTimeout(() => {
         setTimeLeft(timeLeft - 1);
       }, 1000);
+      if (timeLeft <= 3) {
+        setShowWarning(true);
+      }
       return () => clearTimeout(timerId);
     }
   }, [timeLeft, handleNextQuestion, isAnswered, quizCompleted]);
 
   const handleAnswerSelection = (selectedOption) => {
-    if (isAnswered) return; // Mencegah jawaban ganda
+    if (isAnswered) return;
     setIsAnswered(true);
 
-    if (selectedOption === questions[currentQuestionIndex - 1].answer) {
+    if (selectedOption === questions[currentQuestionIndex].answer) {
       const points = timeLeft > 5 ? 2 : 1;
       setScore((prevScore) => prevScore + points);
       setFeedback("Benar!");
@@ -99,7 +68,6 @@ const Quiz = ({ onQuizComplete }) => {
       setFeedback("Salah, coba lagi.");
     }
 
-    // Tampilkan penjelasan setelah jawaban dipilih
     setShowExplanation(true);
   };
 
@@ -108,13 +76,14 @@ const Quiz = ({ onQuizComplete }) => {
   };
 
   const handleRestartQuiz = () => {
-    setCurrentQuestionIndex(1);
+    setCurrentQuestionIndex(0);
     setScore(0);
-    setTimeLeft(10);
+    setTimeLeft(timerSettings[difficulty]);
     setQuizCompleted(false);
     setShowHint(false);
     setFeedback(null);
     setShowExplanation(false);
+    setShowWarning(false);
   };
 
   return (
@@ -123,6 +92,9 @@ const Quiz = ({ onQuizComplete }) => {
         <>
           <div className="flex justify-between items-center mb-4">
             <span>Waktu tersisa: {timeLeft} detik</span>
+            {showWarning && (
+              <span className="text-red-500">Waktu hampir habis!</span>
+            )}
             <button
               onClick={handleShowHint}
               className="text-blue-500 underline"
@@ -131,18 +103,18 @@ const Quiz = ({ onQuizComplete }) => {
             </button>
           </div>
           <Question
-            question={questions[currentQuestionIndex - 1]}
+            question={questions[currentQuestionIndex]}
             onAnswerSelect={handleAnswerSelection}
           />
           {showHint && (
             <p className="text-gray-600 mt-4">
-              Hint: {questions[currentQuestionIndex - 1].hint}
+              Hint: {questions[currentQuestionIndex].hint}
             </p>
           )}
           {feedback && <p className="mt-4">{feedback}</p>}
           {showExplanation && (
             <p className="mt-2 text-gray-600">
-              Penjelasan: {questions[currentQuestionIndex - 1].explanation}
+              Penjelasan: {questions[currentQuestionIndex].explanation}
             </p>
           )}
           {isAnswered && (
@@ -153,6 +125,14 @@ const Quiz = ({ onQuizComplete }) => {
               Next
             </button>
           )}
+          <div className="mt-6 p-4 bg-gray-100 rounded">
+            <h2 className="text-lg font-bold">Tips dan Trik:</h2>
+            <ul className="list-disc pl-5">
+              <li>Baca setiap pertanyaan dengan seksama.</li>
+              <li>Gunakan hint jika Anda merasa kesulitan.</li>
+              <li>Perhatikan waktu, tetapi jangan terburu-buru.</li>
+            </ul>
+          </div>
         </>
       ) : (
         <Result score={score} onRestart={handleRestartQuiz} />
@@ -161,9 +141,10 @@ const Quiz = ({ onQuizComplete }) => {
   );
 };
 
-// PropTypes
 Quiz.propTypes = {
   onQuizComplete: PropTypes.func.isRequired,
+  questions: PropTypes.array.isRequired,
+  difficulty: PropTypes.string.isRequired,
 };
 
 export default Quiz;
